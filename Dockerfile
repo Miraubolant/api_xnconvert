@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
     libc6 \
     xdg-utils \
     unzip \
+    libkrb5-3 \
+    libk5crypto3 \
+    libgssapi-krb5-2 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
