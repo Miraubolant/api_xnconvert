@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y \
     libxcb-shape0 \
     libxcb-xkb1 \
     libxkbcommon-x11-0 \
+    xvfb \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
