@@ -1,0 +1,20 @@
+# Dépendances
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Dossiers de stockage temporaire
+uploads/
+outputs/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Environnement
+.env
