@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 
 # Téléchargement et installation de XnConvert
 WORKDIR /tmp
-RUN wget https://download.xnview.com/XnConvert-linux-x64.deb
+RUN wget --no-check-certificate https://download.xnview.com/XnConvert-linux-x64.deb
 RUN dpkg -i XnConvert-linux-x64.deb || true
 RUN apt-get -f install -y
 RUN rm XnConvert-linux-x64.deb
