@@ -15,6 +15,20 @@ RUN apt-get update && apt-get install -y \
     libkrb5-3 \
     libk5crypto3 \
     libgssapi-krb5-2 \
+    libqt5core5a \
+    libqt5gui5 \
+    libqt5widgets5 \
+    libqt5network5 \
+    libxcb1 \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-render-util0 \
+    libxcb-randr0 \
+    libxcb-xinerama0 \
+    libxcb-shape0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,7 +39,9 @@ RUN dpkg -i XnConvert-linux-x64.deb || true
 RUN apt-get -f install -y
 RUN rm XnConvert-linux-x64.deb
 
-# Configuration de l'application Node.js
+# Configuration des variables d'environnement Qt pour utiliser le plugin xcb
+ENV QT_QPA_PLATFORM=xcb
+ENV DISPLAY=:0
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
