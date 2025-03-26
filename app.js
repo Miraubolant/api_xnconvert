@@ -35,19 +35,22 @@ app.post('/convert', upload.single('image'), (req, res) => {
   const filename = path.parse(req.file.originalname).name;
   const outputPath = path.join(outputsDir, `${filename}_converted.jpg`);
   
-  // Format de sortie (par défaut jpg, peut être passé en paramètre)
-  const outputFormat = req.body.format || 'jpg';
-  
   // Options de conversion par défaut selon la configuration demandée
+  // Le "center" est déjà inclus dans les options de canvas pour centrer l'image
   const options = req.body.options || '-ratio -rtype hanning -resize 1000 1500 -canvas 1000 1500 center -bgcolor 255 255 255 -out jpeg -q 80';
 
-  // Commande XnConvert
-  const command = `xnconvert -input "${inputPath}" -output "${outputPath}" ${options} -overwrite`;
+  // Commande XnConvert avec Xvfb pour exécuter dans un environnement sans affichage
+  const command = `xvfb-run -a xnconvert -input "${inputPath}" -output "${outputPath}" ${options} -overwrite`;
 
   exec(command, (error, stdout, stderr) => {
     if (error) {
       console.error(`Erreur d'exécution: ${error}`);
-      return res.status(500).json({ error: 'Erreur lors de la conversion' });
+      return res.status(500).json({ error: 'Erreur lors de la conversion', details: error.message });
+    }
+    
+    // Vérifier si le fichier de sortie existe
+    if (!fs.existsSync(outputPath)) {
+      return res.status(500).json({ error: 'Le fichier de sortie n\'a pas été créé' });
     }
     
     // Envoi du fichier converti
