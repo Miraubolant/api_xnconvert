@@ -17,12 +17,12 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Install NConvert
+# Install NConvert (URL mise à jour)
 RUN mkdir -p /tmp/nconvert && \
     cd /tmp/nconvert && \
-    wget https://www.xnview.com/download/NConvert-linux64.tgz && \
-    tar -xzvf NConvert-linux64.tgz && \
-    cp /tmp/nconvert/nconvert /usr/local/bin/ && \
+    wget https://download.xnview.com/XnConvert-linux-x64.tgz && \
+    tar -xzvf XnConvert-linux-x64.tgz && \
+    cp /tmp/nconvert/XnConvert/nconvert /usr/local/bin/ && \
     chmod +x /usr/local/bin/nconvert && \
     rm -rf /tmp/nconvert
 
