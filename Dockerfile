@@ -1,56 +1,46 @@
-FROM node:18-slim
+FROM python:3.10-slim
 
-# Installation de XnConvert et dépendances
+# Install dependencies
 RUN apt-get update && apt-get install -y \
+    imagemagick \
+    graphicsmagick \
+    ffmpeg \
+    libvips-tools \
     wget \
-    libglib2.0-0 \
-    libfontconfig1 \
-    libx11-6 \
-    libxext6 \
-    libgl1-mesa-glx \
-    libglu1-mesa \
-    libc6 \
-    xdg-utils \
     unzip \
-    libkrb5-3 \
-    libk5crypto3 \
-    libgssapi-krb5-2 \
-    libqt5core5a \
-    libqt5gui5 \
-    libqt5widgets5 \
-    libqt5network5 \
-    libxcb1 \
-    libxcb-icccm4 \
-    libxcb-image0 \
-    libxcb-keysyms1 \
-    libxcb-render-util0 \
-    libxcb-randr0 \
-    libxcb-xinerama0 \
-    libxcb-shape0 \
-    libxcb-xkb1 \
-    libxkbcommon-x11-0 \
-    xvfb \
+    gimp \
+    libopencv-dev \
+    python3-opencv \
+    libsm6 \
+    libxext6 \
+    libgl1 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Téléchargement et installation de XnConvert
-WORKDIR /tmp
-RUN wget --no-check-certificate https://download.xnview.com/XnConvert-linux-x64.deb
-RUN dpkg -i XnConvert-linux-x64.deb || true
-RUN apt-get -f install -y
-RUN rm XnConvert-linux-x64.deb
+# Install NConvert
+RUN mkdir -p /tmp/nconvert && \
+    cd /tmp/nconvert && \
+    wget https://www.xnview.com/download/NConvert-linux64.tgz && \
+    tar -xzvf NConvert-linux64.tgz && \
+    cp /tmp/nconvert/nconvert /usr/local/bin/ && \
+    chmod +x /usr/local/bin/nconvert && \
+    rm -rf /tmp/nconvert
 
-# Configuration des variables d'environnement Qt pour utiliser le plugin xcb
-ENV QT_QPA_PLATFORM=xcb
-ENV DISPLAY=:0
+# Create app directory
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
-# Création des répertoires nécessaires
-RUN mkdir -p uploads outputs
-RUN chmod 777 uploads outputs
+# Create upload directory
+RUN mkdir -p /tmp/image_processing
 
-EXPOSE 3000
-CMD ["node", "app.js"]
+# Expose port
+EXPOSE 5000
+
+# Run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

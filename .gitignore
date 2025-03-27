@@ -1,20 +1,72 @@
-# Dépendances
-node_modules/
-npm-debug.log
-yarn-error.log
-package-lock.json
+# Fichiers et dossiers Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Dossiers de stockage temporaire
+# Environnements virtuels
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Dossiers de tests et résultats
+test_results/
 uploads/
-outputs/
+processed/
+/tmp/
 
-# Fichiers système
-.DS_Store
-Thumbs.db
+# Fichiers d'images (pour éviter de stocker des images de test dans le dépôt)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.tiff
 
-# Logs
-logs/
+# Logs et bases de données
 *.log
+*.sqlite
+*.db
 
-# Environnement
+# Fichiers IDE et éditeurs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Fichiers Docker
+.dockerignore
+
+# Fichiers de cache et fichiers temporaires
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.tmp
+*.bak
