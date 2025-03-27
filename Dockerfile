@@ -17,14 +17,16 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Install NConvert (URL mise à jour)
-RUN mkdir -p /tmp/nconvert && \
-    cd /tmp/nconvert && \
+# Install XnConvert (utilisez l'exécutable XnConvert au lieu de nconvert)
+RUN mkdir -p /tmp/xnconvert && \
+    cd /tmp/xnconvert && \
     wget https://download.xnview.com/XnConvert-linux-x64.tgz && \
     tar -xzvf XnConvert-linux-x64.tgz && \
-    cp /tmp/nconvert/XnConvert/nconvert /usr/local/bin/ && \
-    chmod +x /usr/local/bin/nconvert && \
-    rm -rf /tmp/nconvert
+    cp /tmp/xnconvert/XnConvert/XnConvert /usr/local/bin/xnconvert && \
+    chmod +x /usr/local/bin/xnconvert && \
+    mkdir -p /usr/local/share/XnConvert && \
+    cp -r /tmp/xnconvert/XnConvert/Plugins /usr/local/share/XnConvert/ && \
+    rm -rf /tmp/xnconvert
 
 # Create app directory
 WORKDIR /app
