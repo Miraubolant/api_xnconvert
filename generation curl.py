@@ -27,19 +27,15 @@ def generate_curl_commands(image_path, width=1000, height=1500, format="jpg", ap
     if output_dir is None:
         output_dir = os.path.join(os.path.expanduser("~"), "Desktop")
     
-    # Liste des outils disponibles
+    # Liste des outils disponibles (nconvert, pyvips, vips et gimp ont été supprimés)
     tools = [
         "imagemagick", 
         "graphicsmagick", 
         "ffmpeg", 
-        "vips", 
         "pillow", 
-        "nconvert", 
         "opencv", 
         "imageio", 
-        "gimp", 
-        "skimage", 
-        "pyvips"
+        "skimage"
     ]
     
     # Convertir keep_ratio en string pour la requête
