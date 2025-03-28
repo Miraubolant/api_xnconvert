@@ -85,32 +85,20 @@ def process_image(tool):
         elif tool == 'ffmpeg':
             process_ffmpeg(input_path, output_path, width, height, resize_mode, keep_ratio, 
                           resampling, crop_position, bg_color, bg_alpha)
-        elif tool == 'vips':
-            process_vips(input_path, output_path, width, height, resize_mode, keep_ratio, 
-                        resampling, crop_position, bg_color, bg_alpha)
         elif tool == 'pillow':
             process_pillow(input_path, output_path, width, height, resize_mode, keep_ratio, 
                           resampling, crop_position, bg_color, bg_alpha)
-        elif tool == 'nconvert':
-            process_nconvert(input_path, output_path, width, height, resize_mode, keep_ratio, 
-                            resampling, crop_position, bg_color, bg_alpha)
         elif tool == 'opencv':
             process_opencv(input_path, output_path, width, height, resize_mode, keep_ratio, 
                           resampling, crop_position, bg_color, bg_alpha)
         elif tool == 'imageio':
             process_imageio(input_path, output_path, width, height, resize_mode, keep_ratio, 
                            resampling, crop_position, bg_color, bg_alpha)
-        elif tool == 'gimp':
-            process_gimp(input_path, output_path, width, height, resize_mode, keep_ratio, 
-                        resampling, crop_position, bg_color, bg_alpha)
         elif tool == 'skimage':
             process_skimage(input_path, output_path, width, height, resize_mode, keep_ratio, 
                            resampling, crop_position, bg_color, bg_alpha)
-        elif tool == 'pyvips':
-            process_pyvips(input_path, output_path, width, height, resize_mode, keep_ratio, 
-                          resampling, crop_position, bg_color, bg_alpha)
         else:
-            return jsonify({"error": f"Unknown tool: {tool}. Available tools: imagemagick, graphicsmagick, ffmpeg, vips, pillow, nconvert, opencv, imageio, gimp, skimage, pyvips"}), 400
+            return jsonify({"error": f"Unknown tool: {tool}. Available tools: imagemagick, graphicsmagick, ffmpeg, pillow, opencv, imageio, skimage"}), 400
         
         # Return the processed image
         return send_file(output_path, as_attachment=True, download_name=output_filename)
@@ -270,32 +258,6 @@ def process_ffmpeg(input_path, output_path, width, height, resize_mode='fit', ke
     
     subprocess.run(cmd, check=True)
 
-def process_vips(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
-                resampling='hanning', crop_position='center', bg_color='white', bg_alpha=255):
-    # VIPS command-line options
-    if resize_mode == 'fit' and keep_ratio:
-        cmd = [
-            'vips', 'thumbnail', input_path, output_path,
-            str(width), '--height', str(height),
-            '--size', 'down',
-            # Retiré '--background', bg_color car option non supportée
-        ]
-    elif resize_mode == 'stretch':
-        cmd = [
-            'vips', 'thumbnail', input_path, output_path,
-            str(width), '--height', str(height),
-            '--size', 'force'
-        ]
-    else:
-        cmd = [
-            'vips', 'thumbnail', input_path, output_path,
-            str(width), '--height', str(height),
-            '--size', 'both',
-            '--crop', crop_position
-        ]
-    
-    subprocess.run(cmd, check=True)
-
 def process_pillow(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
                   resampling='hanning', crop_position='center', bg_color='white', bg_alpha=255):
     # Open image with Pillow
@@ -406,64 +368,6 @@ def process_pillow(input_path, output_path, width, height, resize_mode='fit', ke
     
     # Save the result
     img.save(output_path)
-
-def process_nconvert(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
-                    resampling='hanning', crop_position='center', bg_color='white', bg_alpha=255):
-    # Map resampling methods
-    filter_map = {
-        'nearest': 'nearest',
-        'bilinear': 'bilinear',
-        'bicubic': 'bicubic',
-        'lanczos': 'lanczos',
-        'hanning': 'hanning'
-    }
-    filter_type = filter_map.get(resampling.lower(), 'lanczos')
-    
-    # Map crop position
-    position_map = {
-        'center': 'center',
-        'top': 'top',
-        'bottom': 'bottom',
-        'left': 'left',
-        'right': 'right'
-    }
-    position = position_map.get(crop_position, 'center')
-    
-    # Base command
-    cmd = ['xnconvert', '-silent']
-    
-    # Configure resize/crop based on mode
-    if resize_mode == 'fit' and keep_ratio:
-        cmd.extend([
-            '-resize', str(width), str(height),
-            '-ratio', 'yes',
-            '-rtype', filter_type,
-            '-canvas', str(width), str(height),
-            '-ctype', position,
-            '-bgcolor', bg_color
-        ])
-    elif resize_mode == 'stretch':
-        cmd.extend([
-            '-resize', str(width), str(height),
-            '-ratio', 'no',
-            '-rtype', filter_type
-        ])
-    else:
-        cmd.extend([
-            '-resize', str(width), str(height),
-            '-ratio', 'grow',
-            '-rtype', filter_type,
-            '-crop', str(width), str(height), position
-        ])
-    
-    # Add input and output
-    cmd.extend([
-        '-out', output_path.split('.')[-1],
-        '-o', output_path,
-        input_path
-    ])
-    
-    subprocess.run(cmd, check=True)
 
 def process_opencv(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
                   resampling='hanning', crop_position='center', bg_color='white', bg_alpha=255):
@@ -736,94 +640,6 @@ def process_imageio(input_path, output_path, width, height, resize_mode='fit', k
     
     iio.imwrite(output_path, img_result)
 
-def process_gimp(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
-                resampling='hanning', crop_position='center', bg_color='white', bg_alpha=255):
-    # Create a temporary script file for GIMP
-    script_file = os.path.join(app.config['UPLOAD_FOLDER'], f"{str(uuid.uuid4())}_gimp_script.scm")
-    
-    # Convert position to GIMP position
-    position_map = {
-        'center': 2,
-        'top': 1,
-        'bottom': 3,
-        'left': 4,
-        'right': 5
-    }
-    position = position_map.get(crop_position, 2)
-    
-    # Generate GIMP script based on resize mode
-    if resize_mode == 'fit' and keep_ratio:
-        script = f'''
-(let* (
-  (image (car (gimp-file-load RUN-NONINTERACTIVE "{input_path}" "{input_path}")))
-  (drawable (car (gimp-image-get-active-layer image)))
-  (orig-width (car (gimp-image-width image)))
-  (orig-height (car (gimp-image-height image)))
-  (ratio (min (/ {width} orig-width) (/ {height} orig-height)))
-  (new-width (round (* orig-width ratio)))
-  (new-height (round (* orig-height ratio)))
-)
-  (gimp-image-scale image new-width new-height)
-  (gimp-image-resize image {width} {height} (/ (- {width} new-width) 2) (/ (- {height} new-height) 2))
-  (gimp-context-set-background '(255 255 255))
-  (gimp-layer-resize drawable {width} {height} 0 0)
-  (gimp-drawable-fill (car (gimp-image-get-active-layer image)) BACKGROUND-FILL)
-  (gimp-layer-set-offsets drawable (/ (- {width} new-width) 2) (/ (- {height} new-height) 2))
-  (gimp-file-save RUN-NONINTERACTIVE image drawable "{output_path}" "{output_path}")
-  (gimp-image-delete image)
-)
-(gimp-quit 0)
-'''
-    elif resize_mode == 'stretch':
-        script = f'''
-(let* (
-  (image (car (gimp-file-load RUN-NONINTERACTIVE "{input_path}" "{input_path}")))
-  (drawable (car (gimp-image-get-active-layer image)))
-)
-  (gimp-image-scale image {width} {height})
-  (gimp-file-save RUN-NONINTERACTIVE image drawable "{output_path}" "{output_path}")
-  (gimp-image-delete image)
-)
-(gimp-quit 0)
-'''
-    else:  # Default to crop (fill mode)
-        script = f'''
-(let* (
-  (image (car (gimp-file-load RUN-NONINTERACTIVE "{input_path}" "{input_path}")))
-  (drawable (car (gimp-image-get-active-layer image)))
-  (orig-width (car (gimp-image-width image)))
-  (orig-height (car (gimp-image-height image)))
-  (ratio (max (/ {width} orig-width) (/ {height} orig-height)))
-  (new-width (round (* orig-width ratio)))
-  (new-height (round (* orig-height ratio)))
-  (offx (round (/ (- new-width {width}) 2)))
-  (offy (round (/ (- new-height {height}) 2)))
-)
-  (gimp-image-scale image new-width new-height)
-  (gimp-image-crop image {width} {height} offx offy)
-  (gimp-file-save RUN-NONINTERACTIVE image drawable "{output_path}" "{output_path}")
-  (gimp-image-delete image)
-)
-(gimp-quit 0)
-'''
-    
-    # Write script to file
-    with open(script_file, 'w') as f:
-        f.write(script)
-    
-    # Run GIMP in batch mode with the script
-    cmd = [
-        'gimp',
-        '--no-interface',
-        '--batch', f'(load "{script_file}")',  # Retiré le load-module
-        '--batch', '(gimp-quit 0)'
-    ]
-    subprocess.run(cmd, check=True)
-    
-    # Clean up the script file
-    if os.path.exists(script_file):
-        os.remove(script_file)
-
 def process_skimage(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
                    resampling='hanning', crop_position='center', bg_color='white', bg_alpha=255):
     from skimage import io, transform
@@ -962,100 +778,6 @@ def process_skimage(input_path, output_path, width, height, resize_mode='fit', k
         img_result = img_result[:, :, :3]
     
     io.imsave(output_path, img_result)
-
-def process_pyvips(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
-                  resampling='hanning', crop_position='center', bg_color='white', bg_alpha=255):
-    import pyvips
-    
-    # Map resampling method to pyvips kernel
-    kernel_map = {
-        'nearest': 'nearest',
-        'bilinear': 'linear',
-        'bicubic': 'cubic',
-        'lanczos': 'lanczos3',
-        'hanning': 'linear'  # Not directly supported
-    }
-    kernel = kernel_map.get(resampling.lower(), 'lanczos3')
-    
-    # Load image
-    image = pyvips.Image.new_from_file(input_path)
-    
-    # Process based on resize mode
-    if resize_mode == 'fit' and keep_ratio:
-        # Calculate scale to fit within dimensions
-        scale_x = width / image.width
-        scale_y = height / image.height
-        scale = min(scale_x, scale_y)
-        
-        # Resize the image
-        resized = image.resize(scale, kernel=kernel)
-        
-        # Create a new image with background color
-        # Convert bg_color to pyvips format
-        if isinstance(bg_color, str):
-            if bg_color == 'white':
-                bg = [255, 255, 255]
-            elif bg_color == 'black':
-                bg = [0, 0, 0]
-            else:
-                # Try to parse hex color (not fully implemented)
-                bg = [255, 255, 255]
-        else:
-            bg = [255, 255, 255]
-        
-        # Create background image
-        background = pyvips.Image.new_from_array(
-            [[bg[0], bg[1], bg[2]]], scale=1.0
-        ).resize(width, height)
-        
-        # Calculate position
-        left = (width - resized.width) // 2
-        top = (height - resized.height) // 2
-        
-        if crop_position == 'top':
-            top = 0
-        elif crop_position == 'bottom':
-            top = height - resized.height
-        elif crop_position == 'left':
-            left = 0
-        elif crop_position == 'right':
-            left = width - resized.width
-        
-        # Embed resized image in background
-        result = background.embed(left, top, resized.width, resized.height, extend="copy")
-        result = result.composite(resized, "over", x=left, y=top)
-    
-    elif resize_mode == 'stretch':
-        # Stretch to fit without keeping ratio
-        result = image.resize(width / image.width, vscale=height / image.height, kernel=kernel)
-    
-    else:  # Default to crop (fill mode)
-        # Calculate scale to cover dimensions
-        scale_x = width / image.width
-        scale_y = height / image.height
-        scale = max(scale_x, scale_y)
-        
-        # Resize image
-        resized = image.resize(scale, kernel=kernel)
-        
-        # Calculate crop position
-        left = (resized.width - width) // 2
-        top = (resized.height - height) // 2
-        
-        if crop_position == 'top':
-            top = 0
-        elif crop_position == 'bottom':
-            top = resized.height - height
-        elif crop_position == 'left':
-            left = 0
-        elif crop_position == 'right':
-            left = resized.width - width
-        
-        # Crop image
-        result = resized.crop(left, top, width, height)
-    
-    # Save image
-    result.write_to_file(output_path)
 
 @app.route('/cleanup', methods=['POST'])
 def cleanup():

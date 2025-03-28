@@ -5,10 +5,6 @@ RUN apt-get update && apt-get install -y \
     imagemagick \
     graphicsmagick \
     ffmpeg \
-    libvips-tools \
-    wget \
-    unzip \
-    gimp \
     libopencv-dev \
     python3-opencv \
     libsm6 \
@@ -16,17 +12,6 @@ RUN apt-get update && apt-get install -y \
     libgl1 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
-
-# Install XnConvert (utilisez l'exécutable XnConvert au lieu de nconvert)
-RUN mkdir -p /tmp/xnconvert && \
-    cd /tmp/xnconvert && \
-    wget https://download.xnview.com/XnConvert-linux-x64.tgz && \
-    tar -xzvf XnConvert-linux-x64.tgz && \
-    cp /tmp/xnconvert/XnConvert/XnConvert /usr/local/bin/xnconvert && \
-    chmod +x /usr/local/bin/xnconvert && \
-    mkdir -p /usr/local/share/XnConvert && \
-    cp -r /tmp/xnconvert/XnConvert/Plugins /usr/local/share/XnConvert/ && \
-    rm -rf /tmp/xnconvert
 
 # Create app directory
 WORKDIR /app
