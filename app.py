@@ -169,15 +169,14 @@ def process_pillow(input_path, output_path, width, height):
     img.save(output_path)
 
 def process_nconvert(input_path, output_path, width, height):
-    # Resize and center crop using XnConvert
+    # Resize and center crop using NConvert
     cmd = [
-        'xnconvert',
-        '-silent',           # Mode silencieux
-        '-o', output_path,   # Fichier de sortie
-        '-resize', str(width), str(height),  # Taille cible
-        '-ratio', 'crop',    # Conserve les proportions et recadre
-        '-rtype', 'lanczos', # Meilleure qualité
-        input_path           # Image d'entrée
+        'nconvert',
+        '-resize', f'{width} {height}', '-ratio', '-rtype', 'lanczos',
+        '-canvas', f'{width} {height}', '-ctype', 'center',
+        '-out', output_path.split('.')[-1],
+        '-o', output_path,
+        input_path
     ]
     subprocess.run(cmd, check=True)
 

@@ -2,8 +2,8 @@
 # Script pour tester les performances de différentes méthodes de traitement d'images
 
 # Configuration
-API_URL="https://votre-api.coolify.app"
-IMAGE_PATH="/chemin/vers/votre/image.jpg"
+API_URL="https://xnconvert.miraubolant.com"
+IMAGE_PATH="C:\Users\victo\Pictures\Vetement\product_image_26.jpg"
 WIDTH=800
 HEIGHT=600
 FORMAT="jpg"
