@@ -222,7 +222,7 @@ def process_ffmpeg(input_path, output_path, width, height, resize_mode='fit', ke
         'bilinear': 'bilinear',
         'bicubic': 'bicubic',
         'lanczos': 'lanczos',
-        'hanning': 'hanning'  # FFmpeg supporte hanning
+        'hanning': 'lanczos'  # FFmpeg supporte hanning
     }
     filter_type = filter_map.get(resampling.lower(), 'lanczos')
     
@@ -278,7 +278,7 @@ def process_vips(input_path, output_path, width, height, resize_mode='fit', keep
             'vips', 'thumbnail', input_path, output_path,
             str(width), '--height', str(height),
             '--size', 'down',
-            '--background', bg_color
+            # Retiré '--background', bg_color car option non supportée
         ]
     elif resize_mode == 'stretch':
         cmd = [
@@ -674,7 +674,7 @@ def process_imageio(input_path, output_path, width, height, resize_mode='fit', k
         end_y = start_y + new_h
         
         if has_alpha and img_resized.shape[2] == 4:
-# Alpha compositing
+            # Alpha compositing
             alpha = img_resized[:, :, 3:4] / 255.0
             canvas[start_y:end_y, start_x:end_x, :3] = (
                 img_resized[:, :, :3] * alpha + 
@@ -729,6 +729,10 @@ def process_imageio(input_path, output_path, width, height, resize_mode='fit', k
     # Save the result (convert to uint8 if necessary)
     if img_result.dtype != np.uint8:
         img_result = np.clip(img_result, 0, 255).astype(np.uint8)
+    
+    # Convertir RGBA en RGB pour les fichiers JPEG
+    if output_path.lower().endswith(('.jpg', '.jpeg')) and len(img_result.shape) == 3 and img_result.shape[2] == 4:
+        img_result = img_result[:, :, :3]
     
     iio.imwrite(output_path, img_result)
 
@@ -811,8 +815,7 @@ def process_gimp(input_path, output_path, width, height, resize_mode='fit', keep
     cmd = [
         'gimp',
         '--no-interface',
-        '--batch', f'(load-module "script-fu")' +
-                  f'(load "{script_file}")',
+        '--batch', f'(load "{script_file}")',  # Retiré le load-module
         '--batch', '(gimp-quit 0)'
     ]
     subprocess.run(cmd, check=True)
@@ -954,6 +957,10 @@ def process_skimage(input_path, output_path, width, height, resize_mode='fit', k
     if img_result.dtype != np.uint8:
         img_result = np.clip(img_result, 0, 255).astype(np.uint8)
     
+    # Convertir RGBA en RGB pour les fichiers JPEG
+    if output_path.lower().endswith(('.jpg', '.jpeg')) and len(img_result.shape) == 3 and img_result.shape[2] == 4:
+        img_result = img_result[:, :, :3]
+    
     io.imsave(output_path, img_result)
 
 def process_pyvips(input_path, output_path, width, height, resize_mode='fit', keep_ratio=True, 
@@ -1020,7 +1027,7 @@ def process_pyvips(input_path, output_path, width, height, resize_mode='fit', ke
     
     elif resize_mode == 'stretch':
         # Stretch to fit without keeping ratio
-        result = image.resize(width / image.width, kernel=kernel, vscale=height / image.height)
+        result = image.resize(width / image.width, vscale=height / image.height, kernel=kernel)
     
     else:  # Default to crop (fill mode)
         # Calculate scale to cover dimensions

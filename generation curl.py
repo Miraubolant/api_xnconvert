@@ -1,7 +1,7 @@
 import os
 
 def generate_curl_commands(image_path, width=1000, height=1500, format="jpg", api_base_url="https://xnconvert.miraubolant.com", output_dir=None, 
-                          resize_mode="fit", resampling="hanning", crop_position="center", bg_color="white", bg_alpha=255):
+                          resize_mode="fit", keep_ratio=True, resampling="hanning", crop_position="center", bg_color="white", bg_alpha=255):
     """
     Génère les commandes cURL pour chaque outil de traitement d'image
     et les écrit dans un fichier texte 'curl.txt'.
@@ -14,8 +14,9 @@ def generate_curl_commands(image_path, width=1000, height=1500, format="jpg", ap
         api_base_url (str): URL de base de l'API (défaut: "https://xnconvert.miraubolant.com")
         output_dir (str): Dossier de sortie pour les images traitées (défaut: Bureau)
         resize_mode (str): Mode de redimensionnement - "fit", "fill", "stretch" (défaut: "fit")
-        resampling (str): Méthode de ré-échantillonnage - "nearest", "bilinear", "bicubic", "lanczos", "hanning" (défaut: "hanning")
-        crop_position (str): Position du recadrage - "center", "top", "bottom", "left", "right" (défaut: "center")
+        keep_ratio (bool): Conserver le ratio d'aspect (défaut: True)
+        resampling (str): Méthode de ré-échantillonnage (défaut: "hanning")
+        crop_position (str): Position du recadrage (défaut: "center")
         bg_color (str): Couleur de fond (défaut: "white")
         bg_alpha (int): Alpha pour la couleur de fond (défaut: 255)
     """
@@ -41,14 +42,8 @@ def generate_curl_commands(image_path, width=1000, height=1500, format="jpg", ap
         "pyvips"
     ]
     
-    # Paramètres additionnels pour l'API
-    extra_params = (
-        f'-F "resize_mode={resize_mode}" '
-        f'-F "resampling={resampling}" '
-        f'-F "crop_position={crop_position}" '
-        f'-F "bg_color={bg_color}" '
-        f'-F "bg_alpha={bg_alpha}" '
-    )
+    # Convertir keep_ratio en string pour la requête
+    keep_ratio_str = "true" if keep_ratio else "false"
     
     # Préparer les commandes cURL
     curl_commands = []
@@ -62,7 +57,12 @@ def generate_curl_commands(image_path, width=1000, height=1500, format="jpg", ap
             f'-F "width={width}" '
             f'-F "height={height}" '
             f'-F "format={format}" '
-            f'{extra_params}'
+            f'-F "resize_mode={resize_mode}" '
+            f'-F "keep_ratio={keep_ratio_str}" '
+            f'-F "resampling={resampling}" '
+            f'-F "crop_position={crop_position}" '
+            f'-F "bg_color={bg_color}" '
+            f'-F "bg_alpha={bg_alpha}" '
             f'{api_base_url}/process/{tool} '
             f'-o {output_file}'
         )
@@ -121,6 +121,8 @@ if __name__ == "__main__":
     # Options avancées
     print("\nOptions avancées (appuyez sur Entrée pour utiliser les valeurs par défaut):")
     resize_mode = input("Mode de redimensionnement [fit/fill/stretch] [fit]: ") or "fit"
+    keep_ratio_input = input("Conserver le ratio [true/false] [true]: ").lower() or "true"
+    keep_ratio = keep_ratio_input == "true"
     resampling = input("Méthode de ré-échantillonnage [nearest/bilinear/bicubic/lanczos/hanning] [hanning]: ") or "hanning"
     crop_position = input("Position du recadrage [center/top/bottom/left/right] [center]: ") or "center"
     bg_color = input("Couleur de fond [white]: ") or "white"
@@ -134,7 +136,7 @@ if __name__ == "__main__":
     # Générer les commandes cURL
     curl_commands = generate_curl_commands(
         image_path, width, height, format, custom_api, output_dir,
-        resize_mode, resampling, crop_position, bg_color, bg_alpha
+        resize_mode, keep_ratio, resampling, crop_position, bg_color, bg_alpha
     )
     
     # Créer un fichier batch pour exécution facile
